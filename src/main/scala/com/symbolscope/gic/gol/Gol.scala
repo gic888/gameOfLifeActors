@@ -2,6 +2,7 @@ package com.symbolscope.gic.gol
 
 import akka.actor.{ActorSystem, Props}
 import com.typesafe.config.ConfigFactory
+import io.netty.channel.Channel
 import org.mashupbots.socko.routes.{Routes, WebSocketHandshake}
 import org.mashupbots.socko.webserver.{WebServer, WebServerConfig}
 
@@ -14,10 +15,11 @@ object Gol {
     system.actorOf(Props[InputActor], "input")
     system.actorOf(Props(classOf[GameActor], output, 50, 50), "game")
 
-    val webServer = new WebServer(WebServerConfig(), Routes {
+    val webServer = new WebServer(WebServerConfig("gol", "localhost", 9000), Routes {
       case WebSocketHandshake(wsHandshake) =>
         wsHandshake.authorize()
-        output ! wsHandshake.context.channel()
+        var chan: Channel = wsHandshake.context.channel()
+        output ! RegisterChannel(chan)
       case _ =>
         throw new UnsupportedOperationException("Huh?")
     }, system)

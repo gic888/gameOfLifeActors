@@ -1,6 +1,6 @@
 package com.symbolscope.gic.gol
 
-import org.jboss.netty.channel.Channel
+import io.netty.channel.Channel
 
 /**
  * Message enums

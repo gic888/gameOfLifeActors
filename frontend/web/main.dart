@@ -18,7 +18,7 @@ void initWebSocket([int retrySeconds = 2]) {
   var reconnectScheduled = false;
 
   outputMsg("Connecting to websocket");
-  ws = new WebSocket('ws://localhost:8888');
+  ws = new WebSocket('ws://localhost:9000');
 
   void scheduleReconnect() {
     if (!reconnectScheduled) {
