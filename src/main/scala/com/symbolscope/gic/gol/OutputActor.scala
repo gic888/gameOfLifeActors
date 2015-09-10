@@ -3,6 +3,7 @@ package com.symbolscope.gic.gol
 import akka.actor.Actor
 import akka.event.Logging
 import io.netty.channel.Channel
+import io.netty.handler.codec.http.websocketx.TextWebSocketFrame
 
 import scala.collection.mutable.{HashSet => MutSet}
 
@@ -23,7 +24,7 @@ class OutputActor extends Actor {
   def publish(m: Map[String, Any]): Unit = {
     val json = Json.mapToJson(m)
     logger.info(json)
-    channels.foreach(c => c.write(json))
+    channels.foreach(c => c.writeAndFlush(new TextWebSocketFrame(json)))
   }
 
 }

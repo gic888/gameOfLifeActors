@@ -29,7 +29,6 @@ void initWebSocket([int retrySeconds = 2]) {
 
   ws.onOpen.listen((e) {
     outputMsg('Connected');
-    ws.send('Hello from Dart!');
   });
 
   ws.onClose.listen((e) {
