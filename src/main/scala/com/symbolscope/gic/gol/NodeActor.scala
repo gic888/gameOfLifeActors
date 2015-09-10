@@ -1,16 +1,15 @@
 package com.symbolscope.gic.gol
 
-import akka.actor.{ActorRef, Actor}
+import akka.actor.{Actor, ActorRef}
+
 import scala.collection.mutable.{HashMap => MutMap}
-import scala.util.Random
 
 /**
  * node actor
  */
 class NodeActor(val i: Int, val j: Int, val size: (Int, Int), val output: ActorRef) extends Actor {
   val neighborStates = MutMap[(Int, Int), Boolean]()
-  val random = new Random()
-  var state = random.nextBoolean()
+  var state = false
   val neighbors: Seq[(Int, Int)] = for {
     dx <- -1 to 1
     dy <- -1 to 1
@@ -53,8 +52,7 @@ class NodeActor(val i: Int, val j: Int, val size: (Int, Int), val output: ActorR
   }
 
   def receive = {
-    case Randomize =>
-      setState(random.nextBoolean());
+    case SetState(s) => setState(s)
     case Anounce =>
       announce()
     case State(x, y, s) =>
