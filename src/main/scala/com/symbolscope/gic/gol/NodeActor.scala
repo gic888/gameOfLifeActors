@@ -1,46 +1,48 @@
 package com.symbolscope.gic.gol
 
-import akka.actor.{Actor, ActorRef}
+import akka.actor.{Actor, ActorRef, ActorSelection}
 
-import scala.collection.mutable.{HashMap => MutMap}
+import scala.collection.mutable.{HashMap => MutMap, HashSet => MutSet}
+import scala.concurrent.duration._
 
 /**
  * node actor
  */
-class NodeActor(val i: Int, val j: Int, val size: (Int, Int), val output: ActorRef) extends Actor {
-  val neighborStates = MutMap[(Int, Int), Boolean]()
+class NodeActor(val i: Int, val j: Int, val output: ActorRef) extends Actor {
+  val neighborStates = MutMap[String, Boolean]()
+  val neighborRefs = MutSet[ActorRef]()
   var state = false
-  val neighbors: Seq[(Int, Int)] = for {
-    dx <- -1 to 1
-    dy <- -1 to 1
-    if dx != 0 || dy != 0
-    x = i + dx
-    y = i + dy
-    if x > 0
-    if x < size._1
-    if y > 0
-    if y < size._2
-  } yield (x, y)
+  var tick: FiniteDuration = FiniteDuration(500, MILLISECONDS)
+  context.system.scheduler.schedule(tick, tick, self, Anounce(false))(context.system.dispatcher)
 
-  
-  def announce() {
+  def allPossibleNeighbors(): Seq[ActorSelection] = {
+    for {
+      dx <- -1 to 1
+      dy <- -1 to 1
+      if dx != 0 || dy != 0
+      path = Paths.nodePath(i + dx, j + dy)
+    } yield context.actorSelection(s"../$path")
+
+  }
+
+  def announce(toAll: Boolean) {
     val msg = State(i, j, state)
     output.tell(msg, self)
-    for (coordinates <- neighbors) {
-      val path = Paths.nodePath(coordinates._1, coordinates._2)
-      context.actorSelection(s"../$path").tell(msg, self)
+    if (toAll) {
+      allPossibleNeighbors().foreach(_.tell(msg, self))
+    } else {
+      neighborRefs.foreach(_.tell(msg, self))
     }
   }
 
   def setState(newState: Boolean): Unit = {
     if (newState != state) {
       state = newState
-      announce()
     }
   }
 
   def checkState(): Unit = {
-    if (neighborStates.size < neighbors.size) {
+    if (neighborStates.size < 3) {
       return
     }
     val count = neighborStates.values.count(x => x)
@@ -52,11 +54,17 @@ class NodeActor(val i: Int, val j: Int, val size: (Int, Int), val output: ActorR
   }
 
   def receive = {
-    case SetState(s) => setState(s)
-    case Anounce =>
-      announce()
+    case Connect =>
+      allPossibleNeighbors().foreach(_.tell(Hello, self))
+    case Hello =>
+      neighborRefs.add(sender())
+    case SetState(s) =>
+      setState(s)
+    case Anounce(toAll) =>
+      announce(toAll)
     case State(x, y, s) =>
-      neighborStates((x, y)) = s
+      neighborRefs.add(sender())
+      neighborStates(sender().path.name) = s
       checkState()
   }
 
