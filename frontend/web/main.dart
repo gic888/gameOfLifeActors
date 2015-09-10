@@ -5,19 +5,16 @@ import 'dart:async';
 
 WebSocket ws;
 
-outputMsg(String msg) {
-  var output = querySelector('#output');
+log(String msg) {
+  var output = querySelector('#log');
   var text = msg;
-  if (!output.text.isEmpty) {
-    text = "${output.text}\n${text}";
-  }
   output.text = text;
 }
 
 void initWebSocket([int retrySeconds = 2]) {
   var reconnectScheduled = false;
 
-  outputMsg("Connecting to websocket");
+  log("Connecting to websocket");
   ws = new WebSocket('ws://localhost:9000');
 
   void scheduleReconnect() {
@@ -28,21 +25,21 @@ void initWebSocket([int retrySeconds = 2]) {
   }
 
   ws.onOpen.listen((e) {
-    outputMsg('Connected');
+    log('Connected');
   });
 
   ws.onClose.listen((e) {
-    outputMsg('Websocket closed, retrying in $retrySeconds seconds');
+    log('Websocket closed, retrying in $retrySeconds seconds');
     scheduleReconnect();
   });
 
   ws.onError.listen((e) {
-    outputMsg("Error connecting to ws");
+    log("Error connecting to ws");
     scheduleReconnect();
   });
 
   ws.onMessage.listen((MessageEvent e) {
-    outputMsg('Received message: ${e.data}');
+    log('Received message: ${e.data}');
   });
 }
 
