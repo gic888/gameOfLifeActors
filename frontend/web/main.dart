@@ -2,6 +2,7 @@
 // is governed by a BSD-style license that can be found in the LICENSE file.
 import 'dart:html';
 import 'dart:async';
+import 'dart:convert';
 
 WebSocket ws;
 
@@ -11,8 +12,14 @@ log(String msg) {
   output.text = text;
 }
 
+void drawResult(int i, int j, bool on) {
+  log(i.toString());
+
+}
+
 void initWebSocket([int retrySeconds = 2]) {
   var reconnectScheduled = false;
+  var jsonDecoder = new JsonDecoder();
 
   log("Connecting to websocket");
   ws = new WebSocket('ws://localhost:9000');
@@ -40,6 +47,8 @@ void initWebSocket([int retrySeconds = 2]) {
 
   ws.onMessage.listen((MessageEvent e) {
     log('Received message: ${e.data}');
+    var o = jsonDecoder.convert(e.data);
+    drawResult(o.x, o.y, o.state);
   });
 }
 
