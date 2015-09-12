@@ -9,31 +9,42 @@ typedef void Logger(String);
 
 class GameDisplay {
   CanvasElement canvas;
-  int dotSize;
   int maxVal;
   int width;
   CanvasRenderingContext2D context;
+  Map<Point, bool> states;
 
   GameDisplay(this.canvas) {
-    dotSize = 10;
     maxVal = 3;
     width = canvas.width;
     context = canvas.context2D;
+    states = new Map();
+    window.requestAnimationFrame(draw);
+  }
+
+  void draw([_]) {
+    int dotSize = (width / maxVal).round();
+    context.clearRect(0, 0, width, width);
+    context.setFillColorRgb(0, 0, 0);
+    states.forEach( (point, val) {
+      if (val) {
+        context.fillRect((point.x - 1) * dotSize, (point.y - 1) * dotSize, dotSize, dotSize);
+      }
+    });
+    window.requestAnimationFrame(draw);
   }
 
   void drawResult(Map<String, dynamic> message) {
     int i = message["x"];
     int j = message["y"];
-    maxVal = i > maxVal ? i : maxVal;
-    maxVal = j > maxVal ? j : maxVal;
-    dotSize = (width / maxVal).round();
-    bool state = message["state"];
-    if (state) {
-      context.setFillColorRgb(0, 0, 0);
-    } else {
-      context.setFillColorRgb(200, 200, 200);
+    if (i > maxVal) {
+      maxVal = i;
     }
-    context.fillRect((i -1)*dotSize, (j-1)*dotSize, dotSize, dotSize);
+    if (j > maxVal) {
+      maxVal = j;
+    }
+    bool state = message["state"];
+    states[new Point(i, j)] = state;
   }
 }
 
