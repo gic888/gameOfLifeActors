@@ -8,12 +8,18 @@ import org.mashupbots.socko.webserver.{WebServer, WebServerConfig}
 
 
 object Gol {
+  val size = 4;
+
   def main(args: Array[String]) {
-    val config = ConfigFactory.parseString("akka.log-dead-letters=off")
+    val config = ConfigFactory.parseString(
+      """
+      akka.log-dead-letters=off
+      akka.loglevel=WARNING
+      """)
     implicit val system = ActorSystem.create("gameOfLife", config)
     val output = system.actorOf(Props[OutputActor], "output")
     system.actorOf(Props[InputActor], "input")
-    system.actorOf(Props(classOf[GameActor], output, 50, 50), "game")
+    system.actorOf(Props(classOf[GameActor], output, size, size), "game")
 
     val webServer = new WebServer(WebServerConfig("gol", "localhost", 9000), Routes {
       case WebSocketHandshake(wsHandshake) =>

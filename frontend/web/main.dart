@@ -4,54 +4,99 @@ import 'dart:html';
 import 'dart:async';
 import 'dart:convert';
 
-WebSocket ws;
+typedef void Receive(Map<String, dynamic> message);
+typedef void Logger(String);
 
-log(String msg) {
-  var output = querySelector('#log');
-  var text = msg;
-  output.text = text;
-}
+class GameDisplay {
+  CanvasElement canvas;
+  int dotSize;
+  int maxVal;
+  int width;
+  CanvasRenderingContext2D context;
 
-void drawResult(int i, int j, bool on) {
-  log(i.toString());
-
-}
-
-void initWebSocket([int retrySeconds = 2]) {
-  var reconnectScheduled = false;
-  var jsonDecoder = new JsonDecoder();
-
-  log("Connecting to websocket");
-  ws = new WebSocket('ws://localhost:9000');
-
-  void scheduleReconnect() {
-    if (!reconnectScheduled) {
-      new Timer(new Duration(milliseconds: 1000 * retrySeconds), () => initWebSocket(retrySeconds * 2));
-    }
-    reconnectScheduled = true;
+  GameDisplay(this.canvas) {
+    dotSize = 10;
+    maxVal = 3;
+    width = canvas.width;
+    context = canvas.context2D;
   }
 
-  ws.onOpen.listen((e) {
-    log('Connected');
-  });
+  void drawResult(Map<String, dynamic> message) {
+    int i = message["x"];
+    int j = message["y"];
+    maxVal = i > maxVal ? i : maxVal;
+    maxVal = j > maxVal ? j : maxVal;
+    dotSize = (width / maxVal).round();
+    bool state = message["state"];
+    if (state) {
+      context.setFillColorRgb(0, 0, 0);
+    } else {
+      context.setFillColorRgb(200, 200, 200);
+    }
+    context.fillRect((i -1)*dotSize, (j-1)*dotSize, dotSize, dotSize);
+  }
+}
 
-  ws.onClose.listen((e) {
-    log('Websocket closed, retrying in $retrySeconds seconds');
-    scheduleReconnect();
-  });
 
-  ws.onError.listen((e) {
-    log("Error connecting to ws");
-    scheduleReconnect();
-  });
+class MessageReceiver {
+  bool reconnecting;
+  JsonDecoder jsonDecoder;
+  WebSocket ws;
+  Receive receiver;
+  Logger logger;
+  int retryTime;
+  String address;
 
-  ws.onMessage.listen((MessageEvent e) {
-    log('Received message: ${e.data}');
-    var o = jsonDecoder.convert(e.data);
-    drawResult(o.x, o.y, o.state);
-  });
+  MessageReceiver(this.receiver, this.address, this.logger) {
+    jsonDecoder = new JsonDecoder();
+    retryTime = 4000; //milliseconds between connection attempts
+    logger("Connecting to websocket at $address");
+    connect();
+  }
+
+  void connect() {
+    reconnecting = false;
+    ws = new WebSocket(address);
+
+    void reconnect() {
+      if (!reconnecting) {
+        new Timer(new Duration(milliseconds: retryTime), () => connect());
+      }
+      reconnecting = true;
+    }
+
+    ws.onOpen.listen((e) {
+      logger("connected");
+    });
+
+    ws.onClose.listen((e) {
+      logger('Websocket closed, retrying in $retryTime ms');
+      reconnect();
+    });
+
+    ws.onError.listen((e) {
+      logger("Error connecting to ws");
+      reconnect();
+    });
+
+    ws.onMessage.listen((MessageEvent e) {
+      logger('Received message: ${e.data}');
+      Map<String, dynamic> o = jsonDecoder.convert(e.data);
+      receiver(o);
+    });
+  }
 }
 
 void main() {
-  initWebSocket();
+  void log(String msg) {
+    var output = querySelector('#log');
+    var text = msg;
+    output.text = text;
+  }
+  var inAddy= 'ws://localhost:9000';
+  var outAddy = 'ws://localhost:9001';
+
+  var game = new GameDisplay(querySelector("#draw"));
+  new MessageReceiver(game.drawResult, inAddy, log);
 }
+

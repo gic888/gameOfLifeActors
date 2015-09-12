@@ -12,8 +12,14 @@ class NodeActor(val i: Int, val j: Int, val output: ActorRef) extends Actor {
   val neighborStates = MutMap[String, Boolean]()
   val neighborRefs = MutSet[ActorRef]()
   var state = false
-  var tick: FiniteDuration = FiniteDuration(500, MILLISECONDS)
-  context.system.scheduler.schedule(tick, tick, self, Anounce(false))(context.system.dispatcher)
+  var tick: FiniteDuration = FiniteDuration(5000, MILLISECONDS)
+  implicit val dispatch = context.system.dispatcher
+  context.system.scheduler.scheduleOnce(tick, self, Connect)
+  context.system.scheduler.schedule(2 * tick, tick, self, Anounce(false))
+
+  override def preStart(): Unit = {
+    allPossibleNeighbors().foreach(_.tell(Hello, self))
+  }
 
   def allPossibleNeighbors(): Seq[ActorSelection] = {
     for {
@@ -26,6 +32,7 @@ class NodeActor(val i: Int, val j: Int, val output: ActorRef) extends Actor {
   }
 
   def announce(toAll: Boolean) {
+    //state = Random.nextBoolean()
     val msg = State(i, j, state)
     output.tell(msg, self)
     if (toAll) {
@@ -35,21 +42,19 @@ class NodeActor(val i: Int, val j: Int, val output: ActorRef) extends Actor {
     }
   }
 
-  def setState(newState: Boolean): Unit = {
-    if (newState != state) {
-      state = newState
-    }
-  }
-
   def checkState(): Unit = {
-    if (neighborStates.size < 3) {
-      return
-    }
-    val count = neighborStates.values.count(x => x)
-    if (count == 3) {
-      setState(true)
-    } else if (count < 2 || count > 3) {
-      setState(false)
+    if (neighborStates.size == neighborRefs.size) {
+      val count = neighborStates.values.count(x => x)
+      if (count < 2) {
+        state = false
+      } else if (count == 2) {
+        state = state
+      } else if (count == 3) {
+        state = true
+      } else if (count > 3) {
+        state = false
+      }
+      neighborStates.clear()
     }
   }
 
@@ -59,7 +64,7 @@ class NodeActor(val i: Int, val j: Int, val output: ActorRef) extends Actor {
     case Hello =>
       neighborRefs.add(sender())
     case SetState(s) =>
-      setState(s)
+      state = s
     case Anounce(toAll) =>
       announce(toAll)
     case State(x, y, s) =>
