@@ -8,7 +8,7 @@ import org.mashupbots.socko.webserver.{WebServer, WebServerConfig}
 
 
 object Gol {
-  val size = 40;
+  val size = 60;
 
   def main(args: Array[String]) {
     val config = ConfigFactory.parseString(

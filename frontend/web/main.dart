@@ -11,40 +11,22 @@ class GameDisplay {
   CanvasElement canvas;
   int maxVal;
   int width;
+  int dotSize;
   CanvasRenderingContext2D context;
-  Map<Point, bool> states;
 
   GameDisplay(this.canvas) {
-    maxVal = 3;
+    maxVal = 1;
+    dotSize = 10;
     width = canvas.width;
     context = canvas.context2D;
-    states = new Map();
-    window.requestAnimationFrame(draw);
-  }
-
-  void draw([_]) {
-    int dotSize = (width / maxVal).round();
-    context.clearRect(0, 0, width, width);
-    context.setFillColorRgb(0, 0, 0);
-    states.forEach( (point, val) {
-      if (val) {
-        context.fillRect((point.x - 1) * dotSize, (point.y - 1) * dotSize, dotSize, dotSize);
-      }
-    });
-    window.requestAnimationFrame(draw);
   }
 
   void drawResult(Map<String, dynamic> message) {
     int i = message["x"];
     int j = message["y"];
-    if (i > maxVal) {
-      maxVal = i;
-    }
-    if (j > maxVal) {
-      maxVal = j;
-    }
     bool state = message["state"];
-    states[new Point(i, j)] = state;
+    state ? context.setFillColorRgb(0, 0, 0) : context.setFillColorRgb(220, 220, 220);
+    context.fillRect((i - 1) * dotSize, (j - 1) * dotSize, dotSize, dotSize);
   }
 }
 
@@ -91,7 +73,7 @@ class MessageReceiver {
     });
 
     ws.onMessage.listen((MessageEvent e) {
-      logger('Received message: ${e.data}');
+      //logger('Received message: ${e.data}');
       Map<String, dynamic> o = jsonDecoder.convert(e.data);
       receiver(o);
     });
