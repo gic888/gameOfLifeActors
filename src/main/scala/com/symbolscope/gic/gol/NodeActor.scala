@@ -1,6 +1,6 @@
 package com.symbolscope.gic.gol
 
-import akka.actor.{Actor, ActorRef, ActorSelection}
+import akka.actor.{Kill, Actor, ActorRef, ActorSelection}
 
 import scala.collection.mutable.{HashMap => MutMap, HashSet => MutSet}
 import scala.concurrent.duration._
@@ -16,6 +16,7 @@ class NodeActor(val i: Int, val j: Int, val output: ActorRef) extends Actor {
   implicit val dispatch = context.system.dispatcher
   context.system.scheduler.scheduleOnce(tick, self, Connect)
   context.system.scheduler.schedule(2 * tick, tick, self, Announce(false))
+  System.out.println(s"$i, $j up and running")
 
   override def preStart(): Unit = {
     allPossibleNeighbors().foreach(_.tell(Hello, self))
@@ -77,6 +78,9 @@ class NodeActor(val i: Int, val j: Int, val output: ActorRef) extends Actor {
 
   def freakOutAndDie(): Unit = {
     allPossibleNeighbors().foreach(_.tell("I hate you all", self))
+    output.tell("I hate you all", self)
+    System.out.println("Life sucks. I quit. -- " + self.path.name)
+    self.tell(Kill, self)
     throw new Exception("Life sucks")
   }
 

@@ -21,6 +21,7 @@ object Json {
       case JsString(s) => s
       case JsTrue => true
       case JsFalse => false
+      case _ => ""
     }
   }
 

@@ -2,6 +2,7 @@
 // is governed by a BSD-style license that can be found in the LICENSE file.
 import 'dart:html';
 import 'dart:async';
+import 'dart:math';
 import 'dart:convert';
 
 typedef void Receive(Map<String, dynamic> message);
@@ -12,6 +13,7 @@ class GameDisplay {
   int maxVal;
   int width;
   int dotSize;
+  Random rand = new Random(1000);
   CanvasRenderingContext2D context;
 
   GameDisplay(this.canvas) {
@@ -24,24 +26,41 @@ class GameDisplay {
   void drawResult(Map<String, dynamic> message) {
     int i = message["x"];
     int j = message["y"];
+    if (i > maxVal) {
+      maxVal = i;
+    }
+    if (j > maxVal) {
+      maxVal = j;
+    }
     bool state = message["state"];
     state ? context.setFillColorRgb(0, 0, 0) : context.setFillColorRgb(220, 220, 220);
     context.fillRect((i - 1) * dotSize, (j - 1) * dotSize, dotSize, dotSize);
   }
+
+  Point randomPoint() {
+    return new Point(rand.nextInt(maxVal), rand.nextInt(maxVal));
+  }
+
+  void highlight(Point p) {
+    context.setFillColorRgb(255, 0, 0);
+    context.fillRect((p.x - 1) * dotSize, (p.y - 1) * dotSize, 3 * dotSize, 3 * dotSize);
+  }
 }
 
 
-class MessageReceiver {
+class Messaging {
   bool reconnecting;
   JsonDecoder jsonDecoder;
+  JsonEncoder jsonEncoder;
   WebSocket ws;
   Receive receiver;
   Logger logger;
   int retryTime;
   String address;
 
-  MessageReceiver(this.receiver, this.address, this.logger) {
+  Messaging(this.receiver, this.address, this.logger) {
     jsonDecoder = new JsonDecoder();
+    jsonEncoder = new JsonEncoder();
     retryTime = 4000; //milliseconds between connection attempts
     logger("Connecting to websocket at $address");
     connect();
@@ -78,6 +97,15 @@ class MessageReceiver {
       receiver(o);
     });
   }
+
+  void send(Map<String, dynamic> message) {
+    ws.sendString(jsonEncoder.convert(message));
+  }
+}
+
+
+class MessageSender {
+
 }
 
 void main() {
@@ -86,10 +114,32 @@ void main() {
     var text = msg;
     output.text = text;
   }
+  void discard(Map<String, dynamic> message) {};
+
   var inAddy= 'ws://localhost:9000';
   var outAddy = 'ws://localhost:9001';
 
   var game = new GameDisplay(querySelector("#draw"));
-  new MessageReceiver(game.drawResult, inAddy, log);
+  new Messaging(game.drawResult, inAddy, log);
+  var sender = new Messaging(discard, outAddy, log);
+
+  void randomize(Event e) {
+    log("sending randomize");
+    sender.send({"action": "randomize"});
+
+  }
+
+  void kill(Event e) {
+    var p = game.randomPoint();
+    log("sending kill ${p.x}, ${p.y}");
+    sender.send({"action": "kill", "x": p.x + 1  , "y": p.y + 1});
+    game.highlight(p);
+
+  }
+
+  querySelector('#randomize').onClick.listen(randomize);
+  querySelector('#kill').onClick.listen(kill);
+
+
 }
 

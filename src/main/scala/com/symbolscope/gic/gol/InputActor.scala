@@ -36,7 +36,7 @@ class InputActor extends Actor {
     logger.info("got message" + text)
     try {
       val msg: Map[String, Any] = Json.jsonToMap(text)
-      msg("action") match {
+      msg.get("action") match {
         case Some(s: String) => sendTo.tell(actionFor(s, msg), self)
         case _ => throw new Exception("Message doesn't specify a known 'action'")
       }

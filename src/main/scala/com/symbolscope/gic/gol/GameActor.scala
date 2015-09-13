@@ -2,7 +2,9 @@ package com.symbolscope.gic.gol
 
 import java.util.Date
 
-import akka.actor.{Actor, ActorRef, Props}
+import akka.actor._
+import akka.actor.SupervisorStrategy._
+import scala.concurrent.duration._
 
 import scala.util.Random
 
@@ -17,6 +19,7 @@ class GameActor(output: ActorRef, input: ActorRef, width: Int, height: Int) exte
       context.actorOf(Props(classOf[NodeActor], i, j, output), Paths.nodePath(i, j))
     }
     context.children foreach (_.tell(SetState(Random.nextBoolean()), self))
+    input.tell(Connect, self)
   }
 
   def receive = {
@@ -26,4 +29,10 @@ class GameActor(output: ActorRef, input: ActorRef, width: Int, height: Int) exte
       context.actorSelection(Paths.nodePath(ow.i, ow.j)).tell(ow, sender())
     case x => unhandled(x)
   }
+
+  override val supervisorStrategy =
+    OneForOneStrategy(maxNrOfRetries = 100, withinTimeRange = new FiniteDuration(1, MINUTES)) {
+      case _ =>
+        Restart
+    }
 }

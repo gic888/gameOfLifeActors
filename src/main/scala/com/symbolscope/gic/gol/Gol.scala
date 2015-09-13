@@ -2,10 +2,9 @@ package com.symbolscope.gic.gol
 
 import java.util.logging.{Handler, Level, Logger}
 
-import akka.actor.{ActorRef, ActorSystem, Props}
+import akka.actor.{ActorSystem, Props}
 import com.typesafe.config.ConfigFactory
 import io.netty.channel.Channel
-import io.netty.handler.logging.LogLevel
 import org.mashupbots.socko.routes.{Routes, WebSocketHandshake}
 import org.mashupbots.socko.webserver.{WebServer, WebServerConfig}
 
