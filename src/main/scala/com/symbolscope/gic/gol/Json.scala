@@ -8,7 +8,7 @@ import spray.json._
  */
 object Json {
 
-  implicit object JsonFormat extends JsonFormat[Any] {
+  implicit object Format extends JsonFormat[Any] {
     def write(x: Any) = x match {
       case n: Int => JsNumber(n)
       case s: String => JsString(s)
@@ -26,5 +26,10 @@ object Json {
 
   def mapToJson(x: Map[String, Any]): String = {
     x.toJson.compactPrint
+  }
+
+  def jsonToMap(json: String): Map[String, Any] = {
+    val ast = json.parseJson
+    ast.convertTo[Map[String, Any]]
   }
 }

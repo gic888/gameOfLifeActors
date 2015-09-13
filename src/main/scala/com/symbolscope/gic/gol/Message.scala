@@ -13,9 +13,9 @@ case object Connect extends Message
 
 case object Hello extends Message
 
-case class Anounce(toAll: Boolean) extends Message
+case class Announce(toAll: Boolean) extends Message
 case class SetState(alive: Boolean) extends Message
 case class State(i: Int, j: Int, alive: Boolean) extends Message
-
+case class DearJohn(i: Int, j: Int) extends Message
 case class RegisterChannel(channel: Channel) extends Message
 

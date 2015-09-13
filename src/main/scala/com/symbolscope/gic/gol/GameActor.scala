@@ -9,7 +9,7 @@ import scala.util.Random
 /**
  * main controller for the game
  */
-class GameActor(output: ActorRef, width: Int, height: Int) extends Actor {
+class GameActor(output: ActorRef, input: ActorRef, width: Int, height: Int) extends Actor {
   Random.setSeed(new Date().getTime)
 
   override def preStart() {
@@ -20,6 +20,10 @@ class GameActor(output: ActorRef, width: Int, height: Int) extends Actor {
   }
 
   def receive = {
+    case Randomize =>
+      context.children.foreach(_.tell(SetState(Random.nextBoolean()), self))
+    case ow: DearJohn =>
+      context.actorSelection(Paths.nodePath(ow.i, ow.j)).tell(ow, sender())
     case x => unhandled(x)
   }
 }

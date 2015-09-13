@@ -2,7 +2,7 @@ package com.symbolscope.gic.gol
 
 import java.util.logging.{Handler, Level, Logger}
 
-import akka.actor.{ActorSystem, Props}
+import akka.actor.{ActorRef, ActorSystem, Props}
 import com.typesafe.config.ConfigFactory
 import io.netty.channel.Channel
 import io.netty.handler.logging.LogLevel
@@ -23,12 +23,14 @@ object Gol {
       """)
     implicit val system = ActorSystem.create("gameOfLife", config)
     val output = system.actorOf(Props[OutputActor], "output")
-    system.actorOf(Props[InputActor], "input")
-    system.actorOf(Props(classOf[GameActor], output, size, size), "game")
-    val webServer = new WebServer(WebServerConfig("gol", "localhost", 9000), Routes {
+
+    val input = system.actorOf(Props[InputActor], "input")
+    system.actorOf(Props(classOf[GameActor], output, input, size, size), "game")
+
+    val webServer = new WebServer(WebServerConfig("golOutput", "localhost", 9000), Routes {
       case WebSocketHandshake(wsHandshake) =>
         wsHandshake.authorize()
-        var chan: Channel = wsHandshake.context.channel()
+        val chan: Channel = wsHandshake.context.channel()
         output ! RegisterChannel(chan)
       case _ =>
         throw new UnsupportedOperationException("Huh?")

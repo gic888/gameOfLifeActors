@@ -15,7 +15,7 @@ class NodeActor(val i: Int, val j: Int, val output: ActorRef) extends Actor {
   var tick: FiniteDuration = FiniteDuration(Gol.tick, MILLISECONDS)
   implicit val dispatch = context.system.dispatcher
   context.system.scheduler.scheduleOnce(tick, self, Connect)
-  context.system.scheduler.schedule(2 * tick, tick, self, Anounce(false))
+  context.system.scheduler.schedule(2 * tick, tick, self, Announce(false))
 
   override def preStart(): Unit = {
     allPossibleNeighbors().foreach(_.tell(Hello, self))
@@ -65,12 +65,19 @@ class NodeActor(val i: Int, val j: Int, val output: ActorRef) extends Actor {
       neighborRefs.add(sender())
     case SetState(s) =>
       state = s
-    case Anounce(toAll) =>
+    case Announce(toAll) =>
       announce(toAll)
     case State(x, y, s) =>
       neighborRefs.add(sender())
       neighborStates(sender().path.name) = s
       checkState()
+    case DearJohn(_, _) =>
+      freakOutAndDie()
+  }
+
+  def freakOutAndDie(): Unit = {
+    allPossibleNeighbors().foreach(_.tell("I hate you all", self))
+    throw new Exception("Life sucks")
   }
 
 }
