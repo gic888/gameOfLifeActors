@@ -12,7 +12,7 @@ class NodeActor(val i: Int, val j: Int, val output: ActorRef) extends Actor {
   val neighborStates = MutMap[String, Boolean]()
   val neighborRefs = MutSet[ActorRef]()
   var state = false
-  var tick: FiniteDuration = FiniteDuration(2000, MILLISECONDS)
+  var tick: FiniteDuration = FiniteDuration(Gol.tick, MILLISECONDS)
   implicit val dispatch = context.system.dispatcher
   context.system.scheduler.scheduleOnce(tick, self, Connect)
   context.system.scheduler.schedule(2 * tick, tick, self, Anounce(false))

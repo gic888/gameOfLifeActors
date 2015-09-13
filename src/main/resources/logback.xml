@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<configuration>
+    <logger name="ch.qos.logback" level="WARNING"/>
+    <logger name="io.netty" level="WARNING"/>
+    <logger name="o.m.socko" level="WARNING"/>
+    <logger name="i.n" level="WARNING"/>
+</configuration>
