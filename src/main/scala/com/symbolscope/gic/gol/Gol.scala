@@ -11,7 +11,7 @@ import org.mashupbots.socko.webserver.{WebServer, WebServerConfig}
 
 object Gol {
   val size = 60;
-  val tick = 2000;
+  val tick = 1000;
 
   def main(args: Array[String]) {
     val config = ConfigFactory.parseString(
