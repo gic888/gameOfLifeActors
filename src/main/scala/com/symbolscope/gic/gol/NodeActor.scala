@@ -1,19 +1,20 @@
 package com.symbolscope.gic.gol
 
-import akka.actor.{Kill, Actor, ActorRef, ActorSelection}
+import akka.actor.{Actor, ActorRef, ActorSelection, Kill}
 
 import scala.collection.mutable.{HashMap => MutMap, HashSet => MutSet}
+import scala.concurrent.ExecutionContextExecutor
 import scala.concurrent.duration._
 
 /**
  * node actor
  */
 class NodeActor(val i: Int, val j: Int, val output: ActorRef) extends Actor {
-  val neighborStates = MutMap[String, Boolean]()
-  val neighborRefs = MutSet[ActorRef]()
+  private val neighborStates = MutMap[String, Boolean]()
+  private val neighborRefs = MutSet[ActorRef]()
   var state = false
   var tick: FiniteDuration = FiniteDuration(Gol.tick, MILLISECONDS)
-  implicit val dispatch = context.system.dispatcher
+  implicit val dispatch: ExecutionContextExecutor = context.system.dispatcher
   context.system.scheduler.scheduleOnce(tick, self, Connect)
   context.system.scheduler.schedule(2 * tick, tick, self, Announce(false))
   System.out.println(s"$i, $j up and running")
@@ -59,7 +60,7 @@ class NodeActor(val i: Int, val j: Int, val output: ActorRef) extends Actor {
     }
   }
 
-  def receive = {
+  def receive: PartialFunction[Any, Unit] = {
     case Connect =>
       allPossibleNeighbors().foreach(_.tell(Hello, self))
     case Hello =>

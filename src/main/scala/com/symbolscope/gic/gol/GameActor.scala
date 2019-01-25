@@ -30,7 +30,7 @@ class GameActor(output: ActorRef, input: ActorRef, width: Int, height: Int) exte
     case x => unhandled(x)
   }
 
-  override val supervisorStrategy =
+  override val supervisorStrategy: SupervisorStrategy =
     OneForOneStrategy(maxNrOfRetries = 100, withinTimeRange = new FiniteDuration(1, MINUTES)) {
       case _ =>
         Restart

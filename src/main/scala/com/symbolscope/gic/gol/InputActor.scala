@@ -10,10 +10,10 @@ import org.mashupbots.socko.webserver.{WebServerConfig, WebServer}
  * communication into the system from the Wide World
  */
 class InputActor extends Actor {
-  var sendTo: ActorRef = null
+  var sendTo: ActorRef = _
   val logger = Logging(context.system, this)
 
-  def receive = {
+  def receive: PartialFunction[Any, Unit] = {
     case Connect if sendTo == null =>
       sendTo = sender()
       startServer()

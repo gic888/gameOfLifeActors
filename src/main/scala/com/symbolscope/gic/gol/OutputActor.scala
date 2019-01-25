@@ -12,10 +12,10 @@ import scala.collection.mutable.{HashSet => MutSet}
  */
 class OutputActor extends Actor {
   val logger = Logging(context.system, this)
-  val channels = MutSet[Channel]()
-  val printer = context.actorOf(Props[PrintingActor], "printer")
+  private val channels = MutSet[Channel]()
+  private val printer = context.actorOf(Props[PrintingActor], "printer")
 
-  def receive = {
+  def receive: PartialFunction[Any, Unit] = {
     case State(i, j, alive) =>
       logger.info(s"$i $j -> $alive")
       publish(Map("x" -> i, "y" -> j, "state" -> alive))
@@ -23,7 +23,7 @@ class OutputActor extends Actor {
     case RegisterChannel(c) =>
       channels.add(c)
     case m =>
-      printer.tell(m.toString(), self)
+      printer.tell(m.toString, self)
   }
 
   def publish(m: Map[String, Any]): Unit = {

@@ -9,14 +9,14 @@ import spray.json._
 object Json {
 
   implicit object Format extends JsonFormat[Any] {
-    def write(x: Any) = x match {
+    def write(x: Any): JsValue = x match {
       case n: Int => JsNumber(n)
       case s: String => JsString(s)
       case b: Boolean if b => JsTrue
       case b: Boolean => JsFalse
     }
 
-    def read(value: JsValue) = value match {
+    def read(value: JsValue): Any = value match {
       case JsNumber(n) => n.intValue()
       case JsString(s) => s
       case JsTrue => true

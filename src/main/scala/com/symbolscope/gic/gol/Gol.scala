@@ -1,7 +1,5 @@
 package com.symbolscope.gic.gol
 
-import java.util.logging.{Handler, Level, Logger}
-
 import akka.actor.{ActorSystem, Props}
 import com.typesafe.config.ConfigFactory
 import io.netty.channel.Channel
@@ -10,8 +8,8 @@ import org.mashupbots.socko.webserver.{WebServer, WebServerConfig}
 
 
 object Gol {
-  val size = 60;
-  val tick = 1000;
+  val size = 60
+  val tick = 1000
 
   def main(args: Array[String]) {
     val config = ConfigFactory.parseString(
